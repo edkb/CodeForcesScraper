@@ -1,4 +1,5 @@
-import requests, json, sys, random
+import requests, json, sys, html2markdown, markdown_strings as mds
+from random import randint
 from bs4 import BeautifulSoup
 
 cc_url = "https://codeforces.com/api/problemset.problems"
@@ -12,14 +13,14 @@ if not jres["status"] == "OK":
 result = jres["result"]
 problems = result["problems"]
 desired = []
-rating = 600
+min_rating = 600
+max_rating = 1000
 
 for p in problems:
-    if "rating" in p and p["rating"] <= rating:
+    if "rating" in p and min_rating <= p["rating"] <= max_rating:
         desired.append(p)
-        # print(p["name"], p["rating"], p["contestId"], p["index"])
-    
-problem_index = random.randint(0, len(desired) - 1)
+
+problem_index = randint(0, len(desired) - 1)
 new_problem = desired[problem_index]
 c_id = new_problem['contestId']
 c_ind = new_problem['index']
@@ -29,11 +30,19 @@ problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 res = requests.get(problem_url)
 soup = BeautifulSoup(res.content, 'html.parser')
 
+problem_md = ""
+
 problem_statement = soup.find("div", class_="problem-statement")
 
 header = problem_statement.find("div", class_="header")
 
-title = header.find("div", class_="title").text
+title_tag = header.find("div", class_="title")
+title = title_tag.text
+
+if title_tag.name in html2markdown._supportedTags:
+    problem_md += mds.header("Main Title", 1)
+else:
+    problem_md += title_tag.text
 
 time_limit = header.find("div", class_="time-limit").next_element
 time_limit_title = time_limit.next_element
@@ -78,7 +87,7 @@ sample_tests_text = ""
 
 for child in sample_tests_elements.children:
     sample_tests_text += child.text.strip() + "\n"
-    
+
 note_elem = soup.find("div", class_="note")
 
 note_title = note_elem.next_element.text
@@ -92,47 +101,25 @@ for n in note_elem.children:
             notes += c.text.strip() + "\n"
     except:
         notes += n.text.strip() + "\n"
-        
 
-# print(
-#     title,
-#     time_limit_title,
-#     time_limit_value,
-#     memory_limit_title,
-#     memory_limit_value,
-#     input_file_title,
-#     input_file_value,
-#     output_file_title,
-#     output_file_value,
-#     description,
-#     input_specification_title,
-#     input_text,
-#     output_specification_title,
-#     output_text,
-#     sep="\n"
-# )
-
-with open(title, "w") as file:
-
-    file.write(title)
+with open(title + ".md", "w") as file:
+    file.write(mds.header(title, 1))
     file.write(" #")
     file.write(str(c_id))
     file.write(" - ")
     file.write(c_ind)
     file.write("\n")
-    file.write(description)
+    file.write(mds.esc_format(description))
     file.write("\n")
-    file.write(input_specification_title)
+    file.write(mds.header(input_specification_title, 2))
     file.write("\n")
-    file.write(input_text)
+    file.write(mds.esc_format(input_text))
     file.write("\n")
-    file.write(output_specification_title)
+    file.write(mds.header(output_specification_title, 2))
     file.write("\n")
-    file.write(output_text)
+    file.write(mds.esc_format(output_text))
     file.write("\n\n")
-    file.write(sample_title)
+    file.write(mds.header(sample_title, 2))
     file.write("\n")
-    file.write(sample_tests_text)
-    file.write(notes)
-
-
+    file.write(mds.esc_format(sample_tests_text))
+    file.write(mds.esc_format(notes))
