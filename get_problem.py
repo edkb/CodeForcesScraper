@@ -1,4 +1,6 @@
-import requests, json, sys, html2markdown, markdown_strings as mds
+import errno
+
+import requests, json, sys, os, html2markdown, markdown_strings as mds
 from random import randint
 from bs4 import BeautifulSoup
 
@@ -37,7 +39,7 @@ problem_statement = soup.find("div", class_="problem-statement")
 header = problem_statement.find("div", class_="header")
 
 title_tag = header.find("div", class_="title")
-title = title_tag.text
+title = title_tag.text[3:]
 
 if title_tag.name in html2markdown._supportedTags:
     problem_md += mds.header("Main Title", 1)
@@ -90,19 +92,31 @@ for child in sample_tests_elements.children:
 
 note_elem = soup.find("div", class_="note")
 
-note_title = note_elem.next_element.text
-
-notes = "\n"
-
-for n in note_elem.children:
+if note_elem:
+    note_title = note_elem.next_element.text
     
-    try:
-        for c in c.children:
-            notes += c.text.strip() + "\n"
-    except:
-        notes += n.text.strip() + "\n"
+    notes = "\n"
+    
+    for n in note_elem.children:
+        
+        try:
+            for c in c.children:
+                notes += c.text.strip() + "\n"
+        except:
+            notes += n.text.strip() + "\n"
 
-with open(title + ".md", "w") as file:
+dir_name = title.replace(' ', '_')
+
+filename = f"./{dir_name}/{title}.md"
+
+if not os.path.exists(os.path.dirname(filename)):
+    try:
+        os.makedirs(os.path.dirname(filename))
+    except OSError as exc:  # Guard against race condition
+        if exc.errno != errno.EEXIST:
+            raise
+
+with open(filename, "w") as file:
     file.write(mds.header(title, 1))
     file.write(" #")
     file.write(str(c_id))
@@ -123,3 +137,6 @@ with open(title + ".md", "w") as file:
     file.write("\n")
     file.write(mds.esc_format(sample_tests_text))
     file.write(mds.esc_format(notes))
+    
+with open(f"./{dir_name}/input.txt", "w") as file:
+    file.write(sample_tests_text)
