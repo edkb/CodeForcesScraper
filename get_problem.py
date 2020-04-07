@@ -1,6 +1,5 @@
-import errno
-
-import requests, json, sys, os, html2markdown, markdown_strings as mds
+import requests, json, sys, os, errno
+import html2markdown, markdown_strings as mds
 from random import randint
 from bs4 import BeautifulSoup
 
@@ -105,9 +104,9 @@ if note_elem:
         except:
             notes += n.text.strip() + "\n"
 
-dir_name = title.replace(' ', '_')
+title_underline = title.replace(' ', '_')
 
-filename = f"./{dir_name}/{title}.md"
+filename = f"./{title_underline}/{title_underline}.md"
 
 if not os.path.exists(os.path.dirname(filename)):
     try:
@@ -138,5 +137,5 @@ with open(filename, "w") as file:
     file.write(mds.esc_format(sample_tests_text))
     file.write(mds.esc_format(notes))
     
-with open(f"./{dir_name}/input.txt", "w") as file:
+with open(f"./{title_underline}/input.txt", "w") as file:
     file.write(sample_tests_text)
