@@ -84,10 +84,18 @@ sample_tests = soup.find("div", class_="sample-tests").next_element
 
 sample_title = sample_tests.text
 sample_tests_elements = sample_tests.next_sibling
-sample_tests_text = ""
+sample_tests_input = ""
+sample_tests_output = ""
 
 for child in sample_tests_elements.children:
-    sample_tests_text += child.text.strip() + "\n"
+    
+    if child.attrs["class"][0] == "input":
+        value = child.find("pre").text
+        sample_tests_input += value.strip() + "\n"
+        
+    elif child.attrs["class"][0] == "output":
+        value = child.find("pre").text
+        sample_tests_output += value.strip() + "\n"
 
 note_elem = soup.find("div", class_="note")
 
@@ -134,8 +142,10 @@ with open(filename, "w") as file:
     file.write("\n\n")
     file.write(mds.header(sample_title, 2))
     file.write("\n")
-    file.write(mds.esc_format(sample_tests_text))
+    file.write(mds.esc_format(sample_tests_input))
     file.write(mds.esc_format(notes))
     
 with open(f"./{title_underline}/input.txt", "w") as file:
-    file.write(sample_tests_text)
+    file.write(sample_tests_input)
+with open(f"./{title_underline}/expected_output.txt", "w") as file:
+    file.write(sample_tests_output)
