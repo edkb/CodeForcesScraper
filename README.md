@@ -1,2 +1,2 @@
 # CodeForcesScraping
-Scraps codeforces.com to easily fetch problems without having to navigate on the browser
+Scraps codeforces.com to easily fetch problems without having to search for them on the browser.
