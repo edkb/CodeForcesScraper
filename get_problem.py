@@ -184,17 +184,23 @@ with open(f"./{title_underline}/expected_output.txt", "w") as file:
 
 
 code = """
-def solve(test, data):
-    pass
+def solve(test, input_data):
+
+    answer = 0
+    # Your code goes here
+    
+    write_mode = "a+" if test > 1 else "w"
+    with open("solution_output.txt", write_mode) as output:
+        output.write(str(answer) + "\n")
 
 
 if __name__ == "__main__":
     with open("input.txt", "r") as file:
         n_tests = int(file.readline())
-        data = file.readlines()
+        input_data = [line.strip() for line in file]
 
     for test in range(1, n_tests + 1):
-        solve(test, data)
+        solve(test, input_data)
 """
 with open(f"./{title_underline}/solution.py", "w") as file:
     file.write(code)
