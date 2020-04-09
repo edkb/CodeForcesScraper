@@ -26,8 +26,11 @@ min_rating = 500
 max_rating = 600
 
 for p in problems:
-    if "rating" in p and min_rating <= p["rating"] <= max_rating:
-        desired.append(p)
+    # IS IT RATED???
+    if "rating" in p:
+        # Checks if rating is withing specified rating range
+        if min_rating <= p["rating"] <= max_rating:
+            desired.append(p)
 
 problem_index = randint(0, len(desired) - 1)
 new_problem = desired[problem_index]
@@ -123,8 +126,6 @@ for child in sample_tests_elements.children:
         sample_tests_output += value.strip() + "\n"
         
 sample_tests_input = str(number_of_examples) + "\n" + sample_tests_input
-
-
 
 note_elem_div = soup.find("div", class_="note")
 
