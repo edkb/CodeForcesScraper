@@ -72,33 +72,35 @@ output_file_value = time_limit_title.next_element
 
 description_div = header.next_sibling
 description_html = description_div.prettify()
-
-# For some reason the page formats bold text with surrounding $
-# So this regex replaces it with html's bold syntax
 description = re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
-
+description = re.sub(r" \\le ", r" <= ", description)
+description = re.sub(r" \\ge ", r" >= ", description)
 
 input_text = "\n"
 input_specification_div = soup.find("div", class_="input-specification")
+input_title = input_specification_div.next_element.extract().text
 input_specification_html = input_specification_div.prettify()
-input_specification = re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html) + "\n"
-
+input_specification = f"\n## {input_title}\n\n"
+input_specification += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html) + "\n"
+input_specification = re.sub(r" \\le ", r" <= ", input_specification)
+input_specification = re.sub(r" \\ge ", r" >= ", input_specification)
 
 output_text = "\n"
-output_specification = soup.find("div", class_="output-specification").children
-output_specification_title = output_specification.__next__().text
+output_specification_div = soup.find("div", class_="output-specification")
+output_title = output_specification_div.next_element.extract().text
+output_specification_html = output_specification_div.prettify()
+output_specification = f"\n## {output_title}\n\n"
+output_specification += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html) + "\n"
+output_specification = re.sub(r" \\le ", r" <= ", output_specification)
+output_specification = re.sub(r" \\ge ", r" >= ", output_specification)
 
-for child in output_specification:
-    output_text += child.text
-    
 sample_tests_div = soup.find("div", class_="sample-tests")
+sample_tests_title = sample_tests_div.next_element.extract().text
 sample_tests_html = sample_tests_div.prettify()
-sample_tests = re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", sample_tests_html) + "\n"
+sample_tests = f"\n## {sample_tests_title}\n\n"
+sample_tests += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", sample_tests_html) + "\n"
 
-sample_tests_next_element = soup.find("div", class_="sample-tests").next_element
-
-sample_title = sample_tests_next_element.text
-sample_tests_elements = sample_tests_next_element.next_sibling
+sample_tests_elements = sample_tests_div.next_element
 sample_tests_input = ""
 sample_tests_output = ""
 
@@ -122,20 +124,18 @@ for child in sample_tests_elements.children:
         
 sample_tests_input = str(number_of_examples) + "\n" + sample_tests_input
 
-note_elem = soup.find("div", class_="note")
 
-if note_elem:
-    note_title = note_elem.next_element.text
-    
-    notes = "\n"
-    
-    for n in note_elem.children:
-        
-        try:
-            for c in c.children:
-                notes += c.text.strip() + "\n"
-        except:
-            notes += n.text.strip() + "\n"
+
+note_elem_div = soup.find("div", class_="note")
+
+if note_elem_div:
+    note_elem_text = "\n"
+    note_elem_title = note_elem_div.next_element.extract().text
+    note_elem_html = note_elem_div.prettify()
+    note_elem = f"\n### {note_elem_title}\n\n "
+    note_elem += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", note_elem_html) + "\n"
+    note_elem = re.sub(r" \\le ", r" <= ", note_elem)
+    note_elem = re.sub(r" \\ge ", r" >= ", note_elem)
 
 title_underline = raw_title.replace(' ', '_')
 
@@ -159,17 +159,9 @@ with open(filename, "w") as file:
     file.write(description)
     file.write("\n")
     file.write(input_specification)
-    # file.write("\n")
-    # file.write(input_text)
-    # file.write("\n")
-    # file.write(output_specification_title)
-    # file.write("\n")
-    # file.write(output_text)
-    # file.write("\n\n")
-    # file.write(sample_title)
-    # file.write("\n")
-    # file.write(sample_tests_input)
-    # if notes: file.write(notes)
+    file.write(output_specification)
+    file.write(sample_tests)
+    if note_elem_div: file.write(note_elem)
     
     
 with open(f"./{title_underline}/input.txt", "w") as file:
