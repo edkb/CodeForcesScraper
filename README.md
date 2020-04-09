@@ -9,10 +9,10 @@ Fetches a random problem from codeforces.com, creates a markdown description, in
 **How does it works?**
 It uses the official api to to select a new problem withing a rank range and the scraps the page of the problem, make some tweeks to make more readable on markdown and create the new files.
 
-# Download
+## Download
 `git clone https://github.com/edkb/CodeForcesScrapper`
 
-# Execution
+## Execution
 `pip install requirements.txt`
 
 `python get_problem.py`
