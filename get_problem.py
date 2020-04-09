@@ -133,8 +133,6 @@ for child in sample_tests_elements.children:
         value = child.find("pre").text
         sample_tests_output += value.strip() + "\n"
 
-sample_tests_input = str(number_of_examples) + "\n" + sample_tests_input
-
 note_elem_div = soup.find("div", class_="note")
 
 if note_elem_div:
@@ -184,23 +182,26 @@ with open(f"./{title_underline}/expected_output.txt", "w") as file:
 
 
 code = """
-def solve(test, input_data):
+# Usage:
+# python solution_final.py < input.txt > solution_output.txt
 
-    answer = 0
-    # Your code goes here
-    
-    write_mode = "a+" if test > 1 else "w"
-    with open("solution_output.txt", write_mode) as output:
-        output.write(str(answer) + "\n")
+def solve(input_data):
+    n = int(input_data)
+    print(n)
 
 
 if __name__ == "__main__":
-    with open("input.txt", "r") as file:
-        n_tests = int(file.readline())
-        input_data = [line.strip() for line in file]
-
-    for test in range(1, n_tests + 1):
-        solve(test, input_data)
+    while True:
+        try:
+            solve(input())
+        except:
+            break
 """
+
 with open(f"./{title_underline}/solution.py", "w") as file:
     file.write(code)
+
+with open(f"./{title_underline}/output_solution.txt", "w") as file:
+    # Creates an empty solution file
+    # (this helps when configuring pycharm to redirect output)
+    file.write("")
