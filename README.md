@@ -7,7 +7,7 @@ Fetches a random problem from https://codeforces.com, creates a markdown descrip
 **Why do I need this?** - To easily get new problems to solve without leaving the IDE and switchig to the browser. All the information necessary is saved on the same place.
 
 **How does it works?**
-The script uses the official [api](https://codeforces.com/apiHelp) to to select a new problem within a [rank range](../master/get_problem.py#L25) and then scraps the page of the problem, make some tweeks to make more it readable on markdown and create the new files.
+The script uses the official [api](https://codeforces.com/apiHelp) to to select a new problem within a [rank range](../master/get_problem.py#L25-L26) and then scraps the page of the problem, make some tweeks to make more it readable on markdown and create the new files.
 
 ## Benefits
 - Problem description integrated to the code (no more copying and pasting in the comments)
