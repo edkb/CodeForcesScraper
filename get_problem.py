@@ -178,7 +178,7 @@ def solve(test, data):
 
 if __name__ == "__main__":
     with open("input.txt", "r") as file:
-        n_tests = file.readline()
+        n_tests = int(file.readline())
         data = file.readlines()
 
     for test in range(1, n_tests + 1):
