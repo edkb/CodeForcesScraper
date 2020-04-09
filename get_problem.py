@@ -31,8 +31,8 @@ for p in problems:
 
 problem_index = randint(0, len(desired) - 1)
 new_problem = desired[problem_index]
-c_id = 1223  # new_problem['contestId']
-c_ind = "A"  # new_problem['index']
+c_id = new_problem['contestId']
+c_ind = new_problem['index']
 
 problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
