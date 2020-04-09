@@ -1,6 +1,6 @@
 # CodeForcesScrapper
 
-## TL;DR:
+## TL;DR
 Fetches a random problem from codeforces.com, creates a markdown description, input and output files, a python solution template and saves on a new directory.
 
 ## FAQ
