@@ -9,6 +9,11 @@ Fetches a random problem from https://codeforces.com, creates a markdown descrip
 **How does it works?**
 The script uses the official [api](https://codeforces.com/apiHelp) to to select a new problem within a rank range and then scraps the page of the problem, make some tweeks to make more it readable on markdown and create the new files.
 
+## Benefits
+- Problem description integrated to the code (no more copying and pasting in the comments)
+- Automatic input and expected output files (no more copying and pasting data from the examples)
+- Automatic solution template code (no more recriating the same template solution for every new problem)
+
 ## Download
 `git clone https://github.com/edkb/CodeForcesScrapper`
 
