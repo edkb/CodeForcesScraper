@@ -4,7 +4,7 @@
 Fetches a random problem from https://codeforces.com, creates a markdown description, input and output files, a python solution template and saves all of them on a brand new directory.
 
 ## FAQ
-**Why do I need this?** - To easily get new problems to solve without leaving the IDE and switchig to the browser. All the information necessary is saved on the same place.
+**Why do I need this?** - To easily get new problems to solve without leaving the IDE and switchig to the browser. All the information necessary is saved in the same place.
 
 **How does it works?**
 The script uses the official [api](https://codeforces.com/apiHelp) to to select a new problem within a [rank range](../master/get_problem.py#L25-L26) and then scraps the page of the problem, make some tweeks to make more it readable on markdown and create the new files.
