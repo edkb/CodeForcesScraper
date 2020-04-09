@@ -1,6 +1,4 @@
-import re
-
-import requests, json, sys, os, errno
+import requests, json, sys, os, errno, re
 import markdown_strings as mds
 from random import randint
 from bs4 import BeautifulSoup
