@@ -10,7 +10,7 @@ except Exception as e:
     print("Error with request to codeforce's api.")
     print(f"Message:", e.message)
     sys.exit()
-    
+
 jres = json.loads(res.text)
 
 if not jres["status"] == "OK":
@@ -32,13 +32,13 @@ for p in problems:
 
 problem_index = randint(0, len(desired) - 1)
 new_problem = desired[problem_index]
-c_id = new_problem['contestId']
-c_ind = new_problem['index']
+c_id = new_problem["contestId"]
+c_ind = new_problem["index"]
 
 problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
 res = requests.get(problem_url)
-soup = BeautifulSoup(res.content, 'html.parser')
+soup = BeautifulSoup(res.content, "html.parser")
 
 problem_md = ""
 
@@ -73,7 +73,9 @@ output_file_value = time_limit_title.next_element
 
 description_div = header.next_sibling
 description_html = description_div.prettify()
-description = re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
+description = (
+    re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
+)
 description = re.sub(r" \\le ", r" <= ", description)
 description = re.sub(r" \\ge ", r" >= ", description)
 
@@ -82,7 +84,10 @@ input_specification_div = soup.find("div", class_="input-specification")
 input_title = input_specification_div.next_element.extract().text
 input_specification_html = input_specification_div.prettify()
 input_specification = f"\n## {input_title}\n\n"
-input_specification += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html) + "\n"
+input_specification += (
+    re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html)
+    + "\n"
+)
 input_specification = re.sub(r" \\le ", r" <= ", input_specification)
 input_specification = re.sub(r" \\ge ", r" >= ", input_specification)
 
@@ -91,7 +96,10 @@ output_specification_div = soup.find("div", class_="output-specification")
 output_title = output_specification_div.next_element.extract().text
 output_specification_html = output_specification_div.prettify()
 output_specification = f"\n## {output_title}\n\n"
-output_specification += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html) + "\n"
+output_specification += (
+    re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html)
+    + "\n"
+)
 output_specification = re.sub(r" \\le ", r" <= ", output_specification)
 output_specification = re.sub(r" \\ge ", r" >= ", output_specification)
 
@@ -99,7 +107,9 @@ sample_tests_div = soup.find("div", class_="sample-tests")
 sample_tests_title = sample_tests_div.next_element.extract().text
 sample_tests_html = sample_tests_div.prettify()
 sample_tests = f"\n## {sample_tests_title}\n\n"
-sample_tests += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", sample_tests_html) + "\n"
+sample_tests += (
+    re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", sample_tests_html) + "\n"
+)
 
 sample_tests_elements = sample_tests_div.next_element
 sample_tests_input = ""
@@ -108,21 +118,21 @@ sample_tests_output = ""
 number_of_examples = 0
 
 for child in sample_tests_elements.children:
-    
+
     if child.attrs["class"][0] == "input":
         number_of_examples += 1
         value = child.find("pre")
-        
+
         for v in value.children:
             if v.name == "br":
                 continue
             else:
                 sample_tests_input += v.strip() + "\n"
-        
+
     elif child.attrs["class"][0] == "output":
         value = child.find("pre").text
         sample_tests_output += value.strip() + "\n"
-        
+
 sample_tests_input = str(number_of_examples) + "\n" + sample_tests_input
 
 note_elem_div = soup.find("div", class_="note")
@@ -132,11 +142,13 @@ if note_elem_div:
     note_elem_title = note_elem_div.next_element.extract().text
     note_elem_html = note_elem_div.prettify()
     note_elem = f"\n### {note_elem_title}\n\n "
-    note_elem += re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", note_elem_html) + "\n"
+    note_elem += (
+        re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", note_elem_html) + "\n"
+    )
     note_elem = re.sub(r" \\le ", r" <= ", note_elem)
     note_elem = re.sub(r" \\ge ", r" >= ", note_elem)
 
-title_underline = raw_title.replace(' ', '_')
+title_underline = raw_title.replace(" ", "_")
 
 filename = f"./{title_underline}/{title_underline}.md"
 
@@ -160,12 +172,13 @@ with open(filename, "w") as file:
     file.write(input_specification)
     file.write(output_specification)
     file.write(sample_tests)
-    if note_elem_div: file.write(note_elem)
-    
-    
+    if note_elem_div:
+        file.write(note_elem)
+
+
 with open(f"./{title_underline}/input.txt", "w") as file:
     file.write(sample_tests_input)
-    
+
 with open(f"./{title_underline}/expected_output.txt", "w") as file:
     file.write(sample_tests_output)
 
