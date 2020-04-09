@@ -22,6 +22,16 @@ The script uses the official [api](https://codeforces.com/apiHelp) to to select 
 
 `python get_problem.py`
 
+## Output
+New directory with the folowing template:
+```
+├── Name_of_the_problem
+│   ├── expected_output.txt
+│   ├── Name_of_the_problem.md
+│   ├── input.txt
+│   └── solution.py
+```
+
 ### Example
 
 ![alt text](./example.png "Example")
