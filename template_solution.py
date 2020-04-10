@@ -7,14 +7,11 @@ Testing:
 """
 
 
-def get_input(inputs_number: int = 1) -> str:
+def get_input() -> str:
     """
     Loops throw the stdio to fetch input data
     It may change according to the input of the problem
-    Args:
-        inputs_number: Number of lines of the input
-                       Needs to be manually changed in case of
-                       multiple lines input
+
     Returns:
         raw_input_data: The input of a problem
     """

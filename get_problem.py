@@ -21,8 +21,8 @@ if not jres["status"] == "OK":
 result = jres["result"]
 problems = result["problems"]
 desired = []
-min_rating = 600
-max_rating = 700
+min_rating = 700
+max_rating = 800
 
 for p in problems:
     # IS IT RATED???
