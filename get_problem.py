@@ -134,7 +134,6 @@ file_tests_output = ""
 
 number_of_examples = 0
 number_of_inputs = 0
-input_value = ""
 
 
 with open(f"./{title_underline}/test_solution.py", "w") as file:
@@ -147,7 +146,7 @@ with open(f"./{title_underline}/test_solution.py", "w") as file:
         if child.attrs["class"][0] == "input":
             number_of_examples += 1
             value = child.find("pre")
-    
+            input_value = ""
             for v in value.children:
                 if v.name == "br":
                     continue
@@ -157,13 +156,17 @@ with open(f"./{title_underline}/test_solution.py", "w") as file:
                     input_value += re.sub(r"\n", r"\\n",  v.strip() + "\n")
     
         elif child.attrs["class"][0] == "output":
-            value = child.find("pre").text
-            file_tests_output += value.strip() + "\n"
-            output_value = re.sub(r"\n", r"\\n",  value.strip() + "\n")
+            value = child.find("pre")
+            output_value = ""
+            for v in value.children:
+                if v.name == "br":
+                    continue
+                else:
+                    file_tests_output += v.strip() + "\n"
+                    output_value += re.sub(r"\n", r"\\n",  v.strip() + "\n")
             file.write(
                 f'\n\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
             )
-            input_value = ""
 
 note_elem_div = soup.find("div", class_="note")
 
