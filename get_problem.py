@@ -20,8 +20,8 @@ if not jres["status"] == "OK":
 result = jres["result"]
 problems = result["problems"]
 desired = []
-min_rating = 500
-max_rating = 600
+min_rating = 600
+max_rating = 700
 
 for p in problems:
     # IS IT RATED???
@@ -34,6 +34,7 @@ problem_index = randint(0, len(desired) - 1)
 new_problem = desired[problem_index]
 c_id = new_problem["contestId"]
 c_ind = new_problem["index"]
+rating = new_problem["rating"]
 
 problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
@@ -76,8 +77,8 @@ description_html = description_div.prettify()
 description = (
     re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
 )
-description = re.sub(r" \\le ", r" <= ", description)
-description = re.sub(r" \\ge ", r" >= ", description)
+description = re.sub(r" (\\le|\\leq) ", r" <= ", description)
+description = re.sub(r" (\\ge|\\geq) ", r" >= ", description)
 
 input_text = "\n"
 input_specification_div = soup.find("div", class_="input-specification")
@@ -88,8 +89,8 @@ input_specification += (
     re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html)
     + "\n"
 )
-input_specification = re.sub(r" \\le ", r" <= ", input_specification)
-input_specification = re.sub(r" \\ge ", r" >= ", input_specification)
+input_specification = re.sub(r" (\\le|\\leq) ", r" <= ", input_specification)
+input_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", input_specification)
 
 output_text = "\n"
 output_specification_div = soup.find("div", class_="output-specification")
@@ -100,8 +101,8 @@ output_specification += (
     re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html)
     + "\n"
 )
-output_specification = re.sub(r" \\le ", r" <= ", output_specification)
-output_specification = re.sub(r" \\ge ", r" >= ", output_specification)
+output_specification = re.sub(r" (\\le|\\leq) ", r" <= ", output_specification)
+output_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", output_specification)
 
 sample_tests_div = soup.find("div", class_="sample-tests")
 sample_tests_title = sample_tests_div.next_element.extract().text
@@ -143,8 +144,8 @@ if note_elem_div:
     note_elem += (
         re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", note_elem_html) + "\n"
     )
-    note_elem = re.sub(r" \\le ", r" <= ", note_elem)
-    note_elem = re.sub(r" \\ge ", r" >= ", note_elem)
+    note_elem = re.sub(r" (\\le|\\leq) ", r" <= ", note_elem)
+    note_elem = re.sub(r" (\\ge|\\geq) ", r" >= ", note_elem)
 
 title_underline = raw_title.replace(" ", "_")
 
@@ -164,6 +165,8 @@ with open(filename, "w") as file:
     file.write(str(c_id))
     file.write(" - ")
     file.write(c_ind)
+    file.write("\n")
+    file.write(f"## Rating: {rating}")
     file.write("\n")
     file.write(description)
     file.write("\n")
@@ -186,15 +189,15 @@ code = """
 # python solution_final.py < input.txt > solution_output.txt
 
 
-def solve(input_data):
-    n = input_data
+def solve():
+    n = input()
     print(n)
 
 
 if __name__ == "__main__":
     while True:
         try:
-            solve(input())
+            solve()
         except:
             break
 
