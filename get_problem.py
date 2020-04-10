@@ -150,7 +150,7 @@ title_underline = raw_title.replace(" ", "_")
 
 filename = f"./{title_underline}/{title_underline}.md"
 
-if not os.path.exists(os.path.dirname(f"./{title_underline}")):
+if not os.path.exists(f"./{title_underline}"):
     try:
         os.makedirs(os.path.dirname(filename))
     except OSError as exc:  # Guard against race condition
@@ -185,8 +185,9 @@ code = """
 # Usage:
 # python solution_final.py < input.txt > solution_output.txt
 
+
 def solve(input_data):
-    n = int(input_data)
+    n = input_data
     print(n)
 
 
@@ -196,6 +197,7 @@ if __name__ == "__main__":
             solve(input())
         except:
             break
+
 """
 
 with open(f"./{title_underline}/solution.py", "w") as file:
