@@ -2,6 +2,7 @@ import requests, json, sys, os, errno, re
 import markdown_strings as mds
 from random import randint
 from bs4 import BeautifulSoup
+from shutil import copyfile
 
 cc_url = "https://codeforces.com/api/problemset.problems"
 try:
@@ -36,7 +37,8 @@ c_id = new_problem["contestId"]
 c_ind = new_problem["index"]
 rating = new_problem["rating"]
 
-problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
+# problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
+problem_url = f"https://codeforces.com/problemset/problem/1093/A"
 
 res = requests.get(problem_url)
 soup = BeautifulSoup(res.content, "html.parser")
@@ -52,9 +54,24 @@ title_tag = header.find("div", class_="title")
 
 # Removes index from title
 raw_title = title_tag.text[3:]
+title_underline = raw_title.replace(" ", "_")
 
 # Convert to md title
 title = mds.header(raw_title, 1)
+
+
+filename = f"./{title_underline}/{title_underline}.md"
+
+if not os.path.exists(f"./{title_underline}"):
+    try:
+        os.makedirs(os.path.dirname(filename))
+    except OSError as exc:  # Guard against race condition
+        if exc.errno != errno.EEXIST:
+            raise
+else:
+    print("Problem already fetched, exiting...")
+    sys.exit()
+
 
 time_limit = header.find("div", class_="time-limit").next_element
 time_limit_title = time_limit.next_element
@@ -117,22 +134,39 @@ sample_tests_input = ""
 sample_tests_output = ""
 
 number_of_examples = 0
+number_of_inputs = 0
+input_value = ""
 
-for child in sample_tests_elements.children:
+test_template = """
+def test_solve_{}():
+    assert solve({}) == {}
+"""
 
-    if child.attrs["class"][0] == "input":
-        number_of_examples += 1
-        value = child.find("pre")
+with open(f"./{title_underline}/test_solution.py", "w") as file:
+    file.write("from solution import solve\n")
 
-        for v in value.children:
-            if v.name == "br":
-                continue
-            else:
-                sample_tests_input += v.strip() + "\n"
-
-    elif child.attrs["class"][0] == "output":
-        value = child.find("pre").text
-        sample_tests_output += value.strip() + "\n"
+    for child in sample_tests_elements.children:
+    
+        if child.attrs["class"][0] == "input":
+            number_of_examples += 1
+            value = child.find("pre")
+    
+            for v in value.children:
+                if v.name == "br":
+                    continue
+                else:
+                    number_of_inputs += 1
+                    sample_tests_input += v.strip() + "\n"
+                    input_value += re.sub(r"\n", r"\\n",  v.strip() + "\n")
+    
+        elif child.attrs["class"][0] == "output":
+            value = child.find("pre").text
+            sample_tests_output += value.strip() + "\n"
+            output_value = re.sub(r"\n", r"\\n",  value.strip() + "\n")
+            file.write(
+                f'\n\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
+            )
+            input_value = ""
 
 note_elem_div = soup.find("div", class_="note")
 
@@ -147,16 +181,6 @@ if note_elem_div:
     note_elem = re.sub(r" (\\le|\\leq) ", r" <= ", note_elem)
     note_elem = re.sub(r" (\\ge|\\geq) ", r" >= ", note_elem)
 
-title_underline = raw_title.replace(" ", "_")
-
-filename = f"./{title_underline}/{title_underline}.md"
-
-if not os.path.exists(f"./{title_underline}"):
-    try:
-        os.makedirs(os.path.dirname(filename))
-    except OSError as exc:  # Guard against race condition
-        if exc.errno != errno.EEXIST:
-            raise
 
 with open(filename, "w") as file:
 
@@ -183,30 +207,14 @@ with open(f"./{title_underline}/input.txt", "w") as file:
 with open(f"./{title_underline}/expected_output.txt", "w") as file:
     file.write(sample_tests_output)
 
-
-code = """
-# Usage:
-# python solution_final.py < input.txt > solution_output.txt
-
-
-def solve():
-    n = input()
-    print(n)
-
-
-if __name__ == "__main__":
-    while True:
-        try:
-            solve()
-        except:
-            break
-
-"""
-
-with open(f"./{title_underline}/solution.py", "w") as file:
-    file.write(code)
-
 with open(f"./{title_underline}/output_solution.txt", "w") as file:
     # Creates an empty solution file
     # (this helps when configuring pycharm to redirect output)
     file.write("")
+
+copyfile("./template_solution.py", f"./{title_underline}/solution.py")
+# Crates the solution template file in the new problem directory
+with open(f"./{title_underline}/solution.py", "a+") as file:
+    file.write(f"# {number_of_inputs = }")
+    
+print(f"New problem on ./{title_underline}")
