@@ -19,8 +19,7 @@ def get_input(inputs_number: int = 1) -> str:
         raw_input_data: The input of a problem
     """
     raw_input_data = ""
-    for _ in range(inputs_number):
-        raw_input_data += input()
+    raw_input_data += input()
     return raw_input_data
 
 
@@ -46,10 +45,10 @@ def solve(raw_input_data):
         raw_input_data: the output of the get_input() function
 
     Returns:
-        n: the solution of the problem
+        answer: the solution of the problem
     """
-    n = process_input(raw_input_data)
-    return n
+    answer = process_input(raw_input_data)
+    return answer
 
 
 if __name__ == "__main__":
@@ -60,5 +59,5 @@ if __name__ == "__main__":
             input_data = get_input()
             answer = solve(input_data)
             print(answer)
-        except EOFError:
+        except:
             break

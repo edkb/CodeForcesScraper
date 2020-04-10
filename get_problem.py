@@ -213,8 +213,5 @@ with open(f"./{title_underline}/output_solution.txt", "w") as file:
     file.write("")
 
 copyfile("./template_solution.py", f"./{title_underline}/solution.py")
-# Crates the solution template file in the new problem directory
-with open(f"./{title_underline}/solution.py", "a+") as file:
-    file.write(f"# {number_of_inputs = }")
     
 print(f"New problem on ./{title_underline}")
