@@ -37,8 +37,7 @@ c_id = new_problem["contestId"]
 c_ind = new_problem["index"]
 rating = new_problem["rating"]
 
-# problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
-problem_url = f"https://codeforces.com/problemset/problem/1093/A"
+problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
 res = requests.get(problem_url)
 soup = BeautifulSoup(res.content, "html.parser")
