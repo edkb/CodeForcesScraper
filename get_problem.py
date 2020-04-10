@@ -130,20 +130,18 @@ sample_tests += (
 )
 
 sample_tests_elements = sample_tests_div.next_element
-sample_tests_input = ""
-sample_tests_output = ""
+file_tests_input = ""
+file_tests_output = ""
 
 number_of_examples = 0
 number_of_inputs = 0
 input_value = ""
 
-test_template = """
-def test_solve_{}():
-    assert solve({}) == {}
-"""
 
 with open(f"./{title_underline}/test_solution.py", "w") as file:
     file.write("from solution import solve\n")
+    
+    complete_test_html = sample_tests_elements.prettify()
 
     for child in sample_tests_elements.children:
     
@@ -156,12 +154,12 @@ with open(f"./{title_underline}/test_solution.py", "w") as file:
                     continue
                 else:
                     number_of_inputs += 1
-                    sample_tests_input += v.strip() + "\n"
+                    file_tests_input += v.strip() + "\n"
                     input_value += re.sub(r"\n", r"\\n",  v.strip() + "\n")
     
         elif child.attrs["class"][0] == "output":
             value = child.find("pre").text
-            sample_tests_output += value.strip() + "\n"
+            file_tests_output += value.strip() + "\n"
             output_value = re.sub(r"\n", r"\\n",  value.strip() + "\n")
             file.write(
                 f'\n\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
@@ -202,10 +200,10 @@ with open(filename, "w") as file:
 
 
 with open(f"./{title_underline}/input.txt", "w") as file:
-    file.write(sample_tests_input)
+    file.write(file_tests_input)
 
 with open(f"./{title_underline}/expected_output.txt", "w") as file:
-    file.write(sample_tests_output)
+    file.write(file_tests_output)
 
 with open(f"./{title_underline}/output_solution.txt", "w") as file:
     # Creates an empty solution file
