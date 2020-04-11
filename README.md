@@ -40,14 +40,14 @@ New directory with the folowing template:
 │   └── solution.py
 ```
 
-Read the problem from the Name_of_the_Problem.md .
+Read the problem from the *Name_of_the_Problem.md* .
 
 Code your solution on the solution.py file.
 
 Run your solution like this:
 `python solution.py < input.txt > solution_output.txt`
 
-Here you can compare if the output from your code is equal to the `expected_solution.txt`
+Here you can compare if the output from your code is equal to the *expected_solution.txt*.
 
 If everything is fine, test your code like this:
 `pytest test_solution.py`
