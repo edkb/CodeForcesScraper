@@ -40,9 +40,9 @@ New directory with the folowing template:
 │   └── solution.py
 ```
 
-Read the problem from the Name_of_the_Problem.
+Read the problem from the Name_of_the_Problem.md .
 
-Code your soluition on the soltion.py file.
+Code your solution on the soltion.py file.
 
 Run your solution like this:
 `python solution.py < input.txt > solution_output.txt`
