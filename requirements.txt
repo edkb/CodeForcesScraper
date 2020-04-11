@@ -6,3 +6,4 @@ markdown-strings==3.3.0
 requests==2.23.0
 soupsieve==2.0
 urllib3==1.25.8
+fire~=0.3.1

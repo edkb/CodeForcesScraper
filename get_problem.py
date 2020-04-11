@@ -1,4 +1,4 @@
-import requests, json, sys, os, errno
+import requests, json, os, errno
 import re, fire, datetime, update_problems
 from random import choice
 from bs4 import BeautifulSoup
