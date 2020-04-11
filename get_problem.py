@@ -29,7 +29,7 @@ max_rating = 800
 for p in problems:
     # IS IT RATED???
     if "rating" in p:
-        # Checks if rating is withing specified rating range
+        # Checks if rating is within specified rating range
         if min_rating <= p["rating"] <= max_rating:
             desired.append(p)
 

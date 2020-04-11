@@ -52,7 +52,6 @@ if __name__ == "__main__":
     
     while True:
         try:
-            # Change input lines number here
             input_data = get_input()
             answer = solve(input_data)
             print(answer)
