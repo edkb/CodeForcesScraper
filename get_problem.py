@@ -1,11 +1,12 @@
-import requests, json, sys, os, errno, re, fire, datetime, update_problems
-import markdown_strings as mds
-from random import randint
+import requests, json, sys, os, errno
+import re, fire, datetime, update_problems
+from random import choice
 from bs4 import BeautifulSoup
 from shutil import copyfile
+from typing import List, Dict
 
 
-def fetch_problems() -> list:
+def fetch_problems() -> List:
     try:
         with open("problems.json", "r") as file:
             problems = json.load(file)
@@ -22,8 +23,8 @@ def fetch_problems() -> list:
 
 
 def filter_problems(
-    problems: list, min_rating: int = None, max_rating: int = None
-) -> list:
+    problems: List, min_rating: int = None, max_rating: int = None
+) -> List[Dict]:
     """
     Returns a list of problems between the specified rating
     Args:
@@ -59,49 +60,73 @@ def filter_problems(
     return desired
 
 
-def main(min_rating: int = 700, max_rating: int = 900):
+def is_fetched_problem(title_underline: str, filename: str) -> bool:
+    """
+    Check if the problem already exists
+    Args:
+        title_underline:
+        filename:
+
+    Returns:
+        True if it's fetched,
+        False otherwise
+    """
+    if not os.path.exists(f"./{title_underline}"):
+        try:
+            os.makedirs(os.path.dirname(filename))
+            return True
+        except OSError as exc:  # Guard against race condition
+            if exc.errno != errno.EEXIST:
+                raise
+    return False
+    
+
+def choose_new_problem(desired: List) -> Dict:
+    """
+    Selects a random problem from the desired list
+    Args:
+        desired:
+
+    Returns:
+        new_problem
+    """
+    while True:
+        # Randomly chooses a problem util
+        # ir finds a new one
+        new_problem = choice(desired)
+        title = new_problem["title"]
+        title_underline = title.replace(" ", "_")
+        filename = f"./{title_underline}/{title_underline}.md"
+        
+        if is_fetched_problem(title_underline, filename):
+            continue
+        else:
+            break
+    return new_problem
+
+
+def main(min_rating: int = 700, max_rating: int = 900) -> None:
 
     problems = fetch_problems()
-
     desired = filter_problems(problems, min_rating, max_rating)
     
-    problem_index = randint(0, len(desired) - 1)
-    new_problem = desired[problem_index]
+    new_problem = choose_new_problem(desired)
     
     c_id = new_problem["contestId"]
     c_ind = new_problem["index"]
     rating = new_problem["rating"]
+    title = new_problem["title"]
 
+    title_underline = title.replace(" ", "_")
+    filename = f"./{title_underline}/{title_underline}.md"
+    
     problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
     res = requests.get(problem_url)
     soup = BeautifulSoup(res.content, "html.parser")
 
     problem_statement = soup.find("div", class_="problem-statement")
-
     header = problem_statement.find("div", class_="header")
-
-    # Find title html tag
-    title_tag = header.find("div", class_="title")
-
-    # Removes index from title
-    raw_title = title_tag.text[3:]
-    title_underline = raw_title.replace(" ", "_")
-
-    # Convert to md title
-    title = mds.header(raw_title, 1)
-
-    filename = f"./{title_underline}/{title_underline}.md"
-
-    if not os.path.exists(f"./{title_underline}"):
-        try:
-            os.makedirs(os.path.dirname(filename))
-        except OSError as exc:  # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-    else:
-        print("Problem already fetched, exiting...")
-        sys.exit()
 
     time_limit = header.find("div", class_="time-limit").next_element
     time_limit_title = time_limit.next_element
