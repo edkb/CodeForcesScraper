@@ -47,7 +47,7 @@ Code your solution on the solution.py file.
 Run your solution like this:
 `python solution.py < input.txt > solution_output.txt`
 
-Here you can compare if the output from your code is equal to the *expected_solution.txt*.
+Here you can compare if the output from your code in *solution_output.txt* is equal to the *expected_solution.txt* content.
 
 If everything is fine, test your code like this:
 `pytest test_solution.py`
