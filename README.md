@@ -27,9 +27,9 @@ The script uses the official [api](https://codeforces.com/apiHelp) to to select 
 New directory with the folowing template:
 ```
 ├── Name_of_the_Problem
-│   ├── expected_output.txt
 │   ├── Name_of_the_Problem.md
 │   ├── input.txt
+│   ├── expected_output.txt
 │   ├── output_solution.txt
 │   ├── test_solution.py
 │   └── solution.py
