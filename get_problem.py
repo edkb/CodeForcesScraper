@@ -12,11 +12,13 @@ except Exception as e:
     print(f"Message:", e.message)
     sys.exit()
 
-jres = json.loads(res.text)
-
-if not jres["status"] == "OK":
-    print("Request failed")
+if int(res.status_code) != 200:
+    print(f"Request to {cc_url} failed")
+    print(f"Status code: {res.status_code}")
+    print(f"Reason: {res.reason}")
     sys.exit()
+
+jres = json.loads(res.text)
 
 result = jres["result"]
 problems = result["problems"]
