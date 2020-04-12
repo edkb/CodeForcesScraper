@@ -32,15 +32,16 @@ cd /Name_of_the_Problem
 New directory with the folowing template:
 ```
 ├── Name_of_the_Problem
+│   ├── __init__.py
 │   ├── Name_of_the_Problem.md
-│   ├── input.txt
 │   ├── expected_output.txt
+│   ├── input.txt
 │   ├── output_solution.txt
-│   ├── test_solution.py
-│   └── solution.py
+│   ├── solution.py 
+│   └── test_solution.py
 ```
 
-Read the problem from the *Name_of_the_Problem.md* .
+Read the problem from the *Name_of_the_Problem.md*.
 
 Code your solution on the solution.py file.
 
