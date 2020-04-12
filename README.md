@@ -16,7 +16,7 @@ The script uses the official [api](https://codeforces.com/apiHelp) to to select 
 - Efficiently finds and download new problems directly from the IDE.
 - Automatically creates unit tests from the problem examples, testing both the correctness of the anser and the elapsed time constraint.
 
-## Download & Insatall
+## Download & Install
 ```
 git clone https://github.com/edkb/CodeForcesScrapper
 pip install requirements.txt
