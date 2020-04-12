@@ -3,7 +3,7 @@ import re, fire, datetime, update_problems
 from random import choice
 from bs4 import BeautifulSoup
 from shutil import copyfile
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 
 def fetch_problems() -> List:
@@ -12,18 +12,18 @@ def fetch_problems() -> List:
             problems = json.load(file)
     except FileNotFoundError:
         problems = update_problems.update()
-        
+
     today = datetime.datetime.today()
     problems_date = datetime.datetime.strptime(problems["date"], "%d-%m-%Y")
 
     if today - problems_date > datetime.timedelta(days=7):
         problems = update_problems.update()
-        
+
     return problems["problems"]
 
 
 def filter_problems(
-    problems: List, min_rating: int = None, max_rating: int = None
+    problems: List, min_rating: Optional[int] = None, max_rating: Optional[int] = None
 ) -> List[Dict]:
     """
     Returns a list of problems between the specified rating
@@ -79,16 +79,16 @@ def is_fetched_problem(title_underline: str, filename: str) -> bool:
             if exc.errno != errno.EEXIST:
                 raise
     return False
-    
+
 
 def choose_new_problem(desired: List) -> Dict:
     """
     Selects a random problem from the desired list
     Args:
-        desired:
+        desired: List of the desired problems
 
     Returns:
-        new_problem
+        new_problem: The chosen problem
     """
     while True:
         # Randomly chooses a problem util
@@ -97,7 +97,7 @@ def choose_new_problem(desired: List) -> Dict:
         title = new_problem["title"]
         title_underline = title.replace(" ", "_")
         filename = f"./{title_underline}/{title_underline}.md"
-        
+
         if is_fetched_problem(title_underline, filename):
             continue
         else:
@@ -109,9 +109,9 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
 
     problems = fetch_problems()
     desired = filter_problems(problems, min_rating, max_rating)
-    
+
     new_problem = choose_new_problem(desired)
-    
+
     c_id = new_problem["contestId"]
     c_ind = new_problem["index"]
     rating = new_problem["rating"]
@@ -119,7 +119,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
 
     title_underline = title.replace(" ", "_")
     filename = f"./{title_underline}/{title_underline}.md"
-    
+
     problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
 
     res = requests.get(problem_url)
@@ -197,7 +197,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
     number_of_inputs = 0
 
     with open(f"./{title_underline}/test_solution.py", "w") as file:
-        file.write("from solution import solve\n")
+        file.write("from .solution import solve\n")
 
         complete_test_html = sample_tests_elements.prettify()
 
@@ -225,7 +225,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
                         file_tests_output += v.strip() + "\n"
                         output_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
                 file.write(
-                    f'\n\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
+                    f'\n\n@pytest.mark.timeout({time_limit_value})\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
                 )
 
     note_elem_div = soup.find("div", class_="note")
