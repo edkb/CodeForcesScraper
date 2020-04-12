@@ -1,7 +1,7 @@
 # CodeForcesScrapper
 
 ## TL;DR
-Fetches a random problem from https://codeforces.com, creates a markdown description, input and output files, a python solution template and saves all of them on a brand new directory.
+Fetches a random problem from https://codeforces.com, creates a markdown description, input and output files, a python solution template, create unit tests and saves all of them on a brand new directory.
 
 ## FAQ
 **Why do I need this?** - To easily get new problems to solve without leaving the IDE and switchig to the browser. All the information necessary is saved in the same place.
