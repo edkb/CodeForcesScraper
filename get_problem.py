@@ -94,7 +94,7 @@ def choose_new_problem(desired: List) -> Dict:
         # Randomly chooses a problem util
         # ir finds a new one
         new_problem = choice(desired)
-        title = new_problem["title"]
+        title = new_problem["name"]
         title_underline = title.replace(" ", "_")
         filename = f"./{title_underline}/{title_underline}.md"
 
@@ -115,7 +115,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
     c_id = new_problem["contestId"]
     c_ind = new_problem["index"]
     rating = new_problem["rating"]
-    title = new_problem["title"]
+    title = new_problem["name"]
 
     title_underline = title.replace(" ", "_")
     filename = f"./{title_underline}/{title_underline}.md"
