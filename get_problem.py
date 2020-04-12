@@ -74,11 +74,12 @@ def is_fetched_problem(title_underline: str, filename: str) -> bool:
     if not os.path.exists(f"./{title_underline}"):
         try:
             os.makedirs(os.path.dirname(filename))
-            return True
+            open(f"{title_underline}/__init__.py", 'a').close()
+            return False
         except OSError as exc:  # Guard against race condition
             if exc.errno != errno.EEXIST:
                 raise
-    return False
+    return True
 
 
 def choose_new_problem(desired: List) -> Dict:
@@ -130,7 +131,9 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
 
     time_limit = header.find("div", class_="time-limit").next_element
     time_limit_title = time_limit.next_element
-    time_limit_value = time_limit_title.next_element
+    time_limit_text: str = time_limit_title.next_element
+    time_limit_text = time_limit_text.split(" ")
+    time_limit_value = int(time_limit_text[0])
 
     memory_limit = header.find("div", class_="memory-limit").next
     memory_limit_title = memory_limit.next_element
@@ -194,12 +197,10 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
     file_tests_output = ""
 
     number_of_examples = 0
-    number_of_inputs = 0
 
-    with open(f"./{title_underline}/test_solution.py", "w") as file:
-        file.write("from .solution import solve\n")
+    copyfile("./test_template_solution.py", f"./{title_underline}/test_solution.py")
 
-        complete_test_html = sample_tests_elements.prettify()
+    with open(f"./{title_underline}/test_solution.py", "a+") as file:
 
         for child in sample_tests_elements.children:
 
@@ -211,7 +212,6 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
                     if v.name == "br":
                         continue
                     else:
-                        number_of_inputs += 1
                         file_tests_input += v.strip() + "\n"
                         input_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
 
