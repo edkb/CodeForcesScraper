@@ -243,7 +243,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
         note_elem = re.sub(r" (\\ge|\\geq) ", r" >= ", note_elem)
 
     with open(filename, "w") as file:
-        file.write(f"# [{title} #{c_id} - {c_ind}\n")
+        file.write(f"# [{title} #{c_id} - {c_ind}]({problem_url})\n")
         file.write(f"## Rating: {rating}\n")
         file.write(description + "\n")
         file.write(input_specification)
