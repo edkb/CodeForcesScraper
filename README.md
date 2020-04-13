@@ -1,7 +1,7 @@
 # CodeForcesScrapper
 
 ## TL;DR
-Fetches a random problem from https://codeforces.com, creates a markdown description, input and output files, a python solution template and saves all of them on a brand new directory.
+Fetches a random problem from https://codeforces.com, creates a markdown description, input and output files, a python solution template, create unit tests and saves all of them on a brand new directory.
 
 ## FAQ
 **Why do I need this?** - To easily get new problems to solve without leaving the IDE and switchig to the browser. All the information necessary is saved in the same place.
@@ -14,9 +14,9 @@ The script uses the official [api](https://codeforces.com/apiHelp) to to select 
 - Automatic input and expected output files (no more copying and pasting data from the examples).
 - Automatic solution template code (no more recriating the same template solution for every new problem).
 - Efficiently finds and download new problems directly from the IDE.
-- Automatically creates unit tests from the problem examples.
+- Automatically creates unit tests from the problem examples, testing both the correctness of the anser and the elapsed time constraint.
 
-## Download & Insatall
+## Download & Install
 ```
 git clone https://github.com/edkb/CodeForcesScrapper
 pip install requirements.txt
@@ -32,15 +32,16 @@ cd /Name_of_the_Problem
 New directory with the folowing template:
 ```
 ├── Name_of_the_Problem
+│   ├── __init__.py
 │   ├── Name_of_the_Problem.md
-│   ├── input.txt
 │   ├── expected_output.txt
+│   ├── input.txt
 │   ├── output_solution.txt
-│   ├── test_solution.py
-│   └── solution.py
+│   ├── solution.py 
+│   └── test_solution.py
 ```
 
-Read the problem from the *Name_of_the_Problem.md* .
+Read the problem from the *Name_of_the_Problem.md*.
 
 Code your solution on the solution.py file.
 
