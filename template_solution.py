@@ -16,23 +16,8 @@ def get_input() -> str:
         raw_input_data: The input of a problem
     """
     raw_input_data = ""
-    raw_input_data += input()
+    raw_input_data += input() + "\n"
     return raw_input_data
-
-
-def process_input(raw_input_data: str):
-    """
-    Here the goal is to make the raw input
-    equals to the input provided by the problem example
-    (like the input strings on the test_solution.py)
-    Args:
-        raw_input_data:
-
-    Returns:
-        data: formatted string
-    """
-    data = raw_input_data.strip()
-    return data
 
 
 def solve(raw_input_data):
@@ -44,8 +29,9 @@ def solve(raw_input_data):
     Returns:
         answer: the solution of the problem
     """
-    answer = process_input(raw_input_data)
-    return answer
+    lines = raw_input_data.split("\n")
+    
+    return str(lines) + "\n"
 
 
 if __name__ == "__main__":
@@ -54,6 +40,6 @@ if __name__ == "__main__":
         try:
             input_data = get_input()
             answer = solve(input_data)
-            print(answer)
+            print(answer, end="")
         except:
             break
