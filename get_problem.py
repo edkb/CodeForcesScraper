@@ -1,9 +1,37 @@
-import requests, json, os, errno
-import re, fire, datetime, update_problems
+import requests, json, os, errno, sys
+import re, fire, datetime
 from random import choice
 from bs4 import BeautifulSoup
 from shutil import copyfile
 from typing import List, Dict, Optional
+
+
+def update():
+    problems_endpoint = "https://codeforces.com/api/problemset.problems"
+    try:
+        res = requests.get(problems_endpoint)
+    except Exception as e:
+        print("Error with request to codeforce's api.")
+        print(f"Message:", e.message)
+        sys.exit()
+    
+    if int(res.status_code) != 200:
+        print(f"Request to {problems_endpoint} failed")
+        print(f"Status code: {res.status_code}")
+        print(f"Reason: {res.reason}")
+        sys.exit()
+    
+    jres = json.loads(res.text)
+    problems = jres["result"]["problems"]
+    
+    problems_dict = {
+        "date": datetime.datetime.today().strftime('%d-%m-%Y'),
+        "problems": problems
+    }
+    with open("problems.json", "w") as file:
+        file.write(json.dumps(problems_dict))
+    
+    return problems_dict
 
 
 def fetch_problems() -> List:
@@ -11,19 +39,21 @@ def fetch_problems() -> List:
         with open("problems.json", "r") as file:
             problems = json.load(file)
     except FileNotFoundError:
-        problems = update_problems.update()
+        problems = update()
 
     today = datetime.datetime.today()
     problems_date = datetime.datetime.strptime(problems["date"], "%d-%m-%Y")
 
     if today - problems_date > datetime.timedelta(days=7):
-        problems = update_problems.update()
+        problems = update()
 
     return problems["problems"]
 
 
 def filter_problems(
-    problems: List, min_rating: Optional[int] = None, max_rating: Optional[int] = None
+    problems: List,
+    min_rating: Optional[int] = None,
+    max_rating: Optional[int] = None
 ) -> List[Dict]:
     """
     Returns a list of problems between the specified rating
@@ -60,26 +90,14 @@ def filter_problems(
     return desired
 
 
-def is_fetched_problem(title_underline: str, filename: str) -> bool:
-    """
-    Check if the problem already exists
-    Args:
-        title_underline:
-        filename:
-
-    Returns:
-        True if it's fetched,
-        False otherwise
-    """
-    if not os.path.exists(f"./{title_underline}"):
-        try:
-            os.makedirs(os.path.dirname(filename))
-            open(f"{title_underline}/__init__.py", 'a').close()
-            return False
-        except OSError as exc:  # Guard against race condition
-            if exc.errno != errno.EEXIST:
-                raise
-    return True
+def create_problem_directory_and_files(title_underline: str) -> None:
+    try:
+        md_filename = f"./{title_underline}/{title_underline}.md"
+        os.makedirs(os.path.dirname(md_filename))
+        open(f"{title_underline}/__init__.py", 'a').close()
+    except OSError as exc:  # Guard against race condition
+        if exc.errno != errno.EEXIST:
+            raise
 
 
 def choose_new_problem(desired: List) -> Dict:
@@ -92,47 +110,64 @@ def choose_new_problem(desired: List) -> Dict:
         new_problem: The chosen problem
     """
     while True:
-        # Randomly chooses a problem util
-        # ir finds a new one
+        # Randomly chooses a new problem
         new_problem = choice(desired)
         title = new_problem["name"]
         title_underline = title.replace(" ", "_")
-        filename = f"./{title_underline}/{title_underline}.md"
+        
+        # Create the problem directory and returns the problem
+        # if its a new problem (directory with the problem's name doesn't exist)
+        if not os.path.exists(f"./{title_underline}"):
+            create_problem_directory_and_files(title_underline)
+            return new_problem
 
-        if is_fetched_problem(title_underline, filename):
-            continue
-        else:
-            break
-    return new_problem
 
+def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str] = None) -> None:
 
-def main(min_rating: int = 700, max_rating: int = 900) -> None:
-
-    problems = fetch_problems()
-    desired = filter_problems(problems, min_rating, max_rating)
-
-    new_problem = choose_new_problem(desired)
-
-    c_id = new_problem["contestId"]
-    c_ind = new_problem["index"]
-    rating = new_problem["rating"]
-    title = new_problem["name"]
-
-    title_underline = title.replace(" ", "_")
-    filename = f"./{title_underline}/{title_underline}.md"
-
-    problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
+    if not problem_url:
+        problems = fetch_problems()
+        desired = filter_problems(problems, min_rating, max_rating)
+    
+        new_problem = choose_new_problem(desired)
+    
+        c_id = new_problem["contestId"]
+        c_ind = new_problem["index"]
+        rating = new_problem["rating"]
+        title = new_problem["name"]
+    
+        title_underline = title.replace(" ", "_")
+        md_filename = f"./{title_underline}/{title_underline}.md"
+    
+        problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
+        
+    else:
+        divided_url = problem_url.split("/")
+        
+        c_id = divided_url[-2]
+        c_ind = divided_url[-1]
+        rating = "unknown"
+        title = ""
 
     res = requests.get(problem_url)
     soup = BeautifulSoup(res.content, "html.parser")
 
     problem_statement = soup.find("div", class_="problem-statement")
     header = problem_statement.find("div", class_="header")
+    
+    if not title:
+        # Find title html tag
+        title_tag = header.find("div", class_="title")
+    
+        # Removes index from title
+        raw_title = title_tag.text[3:]
+        title_underline = raw_title.replace(" ", "_")
+        md_filename = f"./{title_underline}/{title_underline}.md"
+        
+        create_problem_directory_and_files(title_underline)
 
     time_limit = header.find("div", class_="time-limit").next_element
     time_limit_title = time_limit.next_element
-    time_limit_text: str = time_limit_title.next_element
-    time_limit_text = time_limit_text.split(" ")
+    time_limit_text: str = time_limit_title.next_element.split(" ")
     time_limit_value = int(time_limit_text[0])
 
     memory_limit = header.find("div", class_="memory-limit").next
@@ -242,7 +277,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
         note_elem = re.sub(r" (\\le|\\leq) ", r" <= ", note_elem)
         note_elem = re.sub(r" (\\ge|\\geq) ", r" >= ", note_elem)
 
-    with open(filename, "w") as file:
+    with open(md_filename, "w") as file:
         file.write(f"# [{title} #{c_id} - {c_ind}]({problem_url})\n")
         file.write(f"## Rating: {rating}\n")
         file.write(description + "\n")
@@ -258,7 +293,7 @@ def main(min_rating: int = 700, max_rating: int = 900) -> None:
     with open(f"./{title_underline}/expected_output.txt", "w") as file:
         file.write(file_tests_output)
 
-    with open(f"./{title_underline}/output_solution.txt", "w") as file:
+    with open(f"./{title_underline}/solution_output.txt", "w") as file:
         # Creates an empty solution file
         # (this helps when configuring pycharm to redirect output)
         file.write("")
