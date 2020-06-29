@@ -1,7 +1,7 @@
 import requests, json, os, errno, sys
 import re, fire, datetime
 from random import choice
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag, ResultSet, NavigableString
 from shutil import copyfile
 from typing import List, Dict, Optional
 
@@ -151,8 +151,8 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
     res = requests.get(problem_url)
     soup = BeautifulSoup(res.content, "html.parser")
 
-    problem_statement = soup.find("div", class_="problem-statement")
-    header = problem_statement.find("div", class_="header")
+    problem_statement: Tag = soup.find("div", class_="problem-statement")
+    header: Tag = problem_statement.find("div", class_="header")
     
     if not title:
         # Find title html tag
@@ -170,31 +170,35 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
     time_limit_text: str = time_limit_title.next_element.split(" ")
     time_limit_value = int(time_limit_text[0])
 
-    memory_limit = header.find("div", class_="memory-limit").next
-    memory_limit_title = memory_limit.next_element
-    memory_limit_value = memory_limit_title.next_element
+    memory_limit = header.find("div", class_="memory-limit")
+    memory_limit_title = memory_limit.contents[1].text
+    memory_limit_value = memory_limit.contents[2].string
 
-    input_file = header.find("div", class_="input-file").next
-    input_file_title = input_file.next_element
-    input_file_value = input_file_title.next_element
+    input_file = header.find("div", class_="input-file")
+    input_file_title = input_file.contents[1].text
+    input_file_value = input_file.contents[2].string
 
-    output_file = header.find("div", class_="output-file").next
-    output_file_title = time_limit.next_element
-    output_file_value = time_limit_title.next_element
+    output_file = header.find("div", class_="output-file")
+    output_file_title = output_file.contents[1].text
+    output_file_value = output_file.contents[2].string
 
-    description_div = header.next_sibling
-    description_html = description_div.prettify()
+    description_div: Tag = header.next_sibling
+    while isinstance(description_div, NavigableString):
+        description_div = description_div.next_sibling
+        
+    description_html: str = description_div.prettify()
     description = (
         re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
     )
     description = re.sub(r" (\\le|\\leq) ", r" <= ", description)
     description = re.sub(r" (\\ge|\\geq) ", r" >= ", description)
 
-    input_text = "\n"
-    input_specification_div = soup.find("div", class_="input-specification")
-    input_title = input_specification_div.next_element.extract().text
+    input_specification_div: Tag = soup.find("div", class_="input-specification")
+    input_title_div: Tag = input_specification_div.find("div", class_="section-title")
+    input_title: str = input_title_div.text
+    input_title_div.decompose()
     input_specification_html = input_specification_div.prettify()
-    input_specification = f"\n## {input_title}\n\n"
+    input_specification = f"\n### {input_title}\n\n"
     input_specification += (
         re.sub(
             r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html
@@ -204,11 +208,12 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
     input_specification = re.sub(r" (\\le|\\leq) ", r" <= ", input_specification)
     input_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", input_specification)
 
-    output_text = "\n"
     output_specification_div = soup.find("div", class_="output-specification")
-    output_title = output_specification_div.next_element.extract().text
+    output_title_div = output_specification_div.find("div", class_="section-title")
+    output_title: str = output_title_div.text
+    output_title_div.decompose()
     output_specification_html = output_specification_div.prettify()
-    output_specification = f"\n## {output_title}\n\n"
+    output_specification = f"\n### {output_title}\n\n"
     output_specification += (
         re.sub(
             r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html
@@ -218,8 +223,11 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
     output_specification = re.sub(r" (\\le|\\leq) ", r" <= ", output_specification)
     output_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", output_specification)
 
-    sample_tests_div = soup.find("div", class_="sample-tests")
-    sample_tests_title = sample_tests_div.next_element.extract().text
+    sample_tests_div: Tag = soup.find("div", class_="sample-tests")
+    sample_tests_title_div = sample_tests_div.find(class_="section-title")
+    sample_tests_title = sample_tests_title_div.text
+    sample_tests_title_div.decompose()
+    
     sample_tests_html = sample_tests_div.prettify()
     sample_tests = f"\n## {sample_tests_title}\n\n"
     sample_tests += (
@@ -227,7 +235,11 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
         + "\n"
     )
 
-    sample_tests_elements = sample_tests_div.next_element
+    sample_tests_elements: Tag = sample_tests_div.find(class_="sample-test")
+    
+    input_elements: ResultSet = sample_tests_elements.find(class_="input").find_all("pre")
+    output_elements: ResultSet = sample_tests_elements.find(class_="output").find_all("pre")
+    
     file_tests_input = ""
     file_tests_output = ""
 
@@ -237,37 +249,33 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
 
     with open(f"./{title_underline}/test_solution.py", "a+") as file:
 
-        for child in sample_tests_elements.children:
+        for input_child, output_child in zip(input_elements, output_elements):
 
-            if child.attrs["class"][0] == "input":
-                number_of_examples += 1
-                value = child.find("pre")
-                input_value = ""
-                for v in value.children:
-                    if v.name == "br":
-                        continue
-                    else:
-                        file_tests_input += v.strip() + "\n"
-                        input_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
+            input_value = ""
+            for v in input_child.children:
+                if v.name == "br":
+                    continue
+                else:
+                    file_tests_input += v.strip() + "\n"
+                    input_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
 
-            elif child.attrs["class"][0] == "output":
-                value = child.find("pre")
                 output_value = ""
-                for v in value.children:
-                    if v.name == "br":
-                        continue
-                    else:
-                        file_tests_output += v.strip() + "\n"
-                        output_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
-                file.write(
-                    f'\n\n@pytest.mark.timeout({time_limit_value})\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
-                )
+            for v in output_child.children:
+                if v.name == "br":
+                    continue
+                else:
+                    file_tests_output += v.strip() + "\n"
+                    output_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
+            file.write(
+                f'\n\n@pytest.mark.timeout({time_limit_value})\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
+            )
 
-    note_elem_div = soup.find("div", class_="note")
+    note_elem_div: Tag = soup.find("div", class_="note")
 
     if note_elem_div:
-        note_elem_text = "\n"
-        note_elem_title = note_elem_div.next_element.extract().text
+        note_elem_title_div: Tag = note_elem_div.find("div", class_="section-title")
+        note_elem_title = note_elem_title_div.text
+        note_elem_title_div.decompose()
         note_elem_html = note_elem_div.prettify()
         note_elem = f"\n### {note_elem_title}\n\n "
         note_elem += (
@@ -279,8 +287,11 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
 
     with open(md_filename, "w") as file:
         file.write(f"# [{title} #{c_id} - {c_ind}]({problem_url})\n")
-        file.write(f"## Rating: {rating}\n")
-        file.write(description + "\n")
+        file.write(f"### Rating: {rating}\n")
+        file.write(f"\n{memory_limit_title}: {memory_limit_value}\n")
+        file.write(f"\n{input_file_title}: {input_file_value}\n")
+        file.write(f"\n{output_file_title}: {output_file_value}\n")
+        file.write(f"##Description {description} \n")
         file.write(input_specification)
         file.write(output_specification)
         file.write(sample_tests)
