@@ -1,4 +1,6 @@
-import requests, json, os, errno, sys
+import requests
+from requests import Response
+import json, os, errno, sys
 import re, fire, datetime
 from random import choice
 from bs4 import BeautifulSoup, Tag, ResultSet, NavigableString
@@ -6,13 +8,30 @@ from shutil import copyfile
 from typing import List, Dict, Optional
 
 
-def update():
+def fix_html_notation(html_tag: Tag) -> str:
+    
+    # Transform html tag to pretty-print string
+    html_text: str = html_tag.prettify()
+    
+    # Transform $$$ bold notation to html bold notation
+    html_text = re.sub(r"\$\$\$([^$]+)\$\$\$", r"<strong>\1</strong>", html_text) + "\n"
+
+    # Transform le/leq notation to html less or equal notation
+    html_text = re.sub(r" (\\le|\\leq) ", r" <= ", html_text)
+    
+    # Transform ge/geq notation to html greater or equal notation
+    html_text = re.sub(r" (\\ge|\\geq) ", r" >= ", html_text)
+    
+    return html_text
+
+
+def update() -> Dict:
     problems_endpoint = "https://codeforces.com/api/problemset.problems"
     try:
         res = requests.get(problems_endpoint)
     except Exception as e:
         print("Error with request to codeforce's api.")
-        print(f"Message:", e.message)
+        print(f"Message:", e.args[0])
         sys.exit()
     
     if int(res.status_code) != 200:
@@ -122,7 +141,11 @@ def choose_new_problem(desired: List) -> Dict:
             return new_problem
 
 
-def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str] = None) -> None:
+def main(
+        min_rating: int = 700,
+        max_rating: int = 900,
+        problem_url: Optional[str] = None
+) -> None:
 
     if not problem_url:
         problems = fetch_problems()
@@ -133,10 +156,6 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
         c_id = new_problem["contestId"]
         c_ind = new_problem["index"]
         rating = new_problem["rating"]
-        title = new_problem["name"]
-    
-        title_underline = title.replace(" ", "_")
-        md_filename = f"./{title_underline}/{title_underline}.md"
     
         problem_url = f"https://codeforces.com/problemset/problem/{c_id}/{c_ind}"
         
@@ -146,24 +165,23 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
         c_id = divided_url[-2]
         c_ind = divided_url[-1]
         rating = "unknown"
-        title = ""
 
-    res = requests.get(problem_url)
-    soup = BeautifulSoup(res.content, "html.parser")
+    # Fetch problem page
+    response: Response = requests.get(problem_url)
+    soup = BeautifulSoup(response.content, "html.parser")
 
     problem_statement: Tag = soup.find("div", class_="problem-statement")
     header: Tag = problem_statement.find("div", class_="header")
     
-    if not title:
-        # Find title html tag
-        title_tag = header.find("div", class_="title")
+    # Find title html tag
+    title_tag = header.find("div", class_="title")
+
+    # Removes index from title
+    raw_title = title_tag.text[3:]
+    title_underline = raw_title.replace(" ", "_")
+    md_filename = f"./{title_underline}/{title_underline}.md"
     
-        # Removes index from title
-        raw_title = title_tag.text[3:]
-        title_underline = raw_title.replace(" ", "_")
-        md_filename = f"./{title_underline}/{title_underline}.md"
-        
-        create_problem_directory_and_files(title_underline)
+    create_problem_directory_and_files(title_underline)
 
     time_limit = header.find("div", class_="time-limit").next_element
     time_limit_title = time_limit.next_element
@@ -186,54 +204,31 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
     while isinstance(description_div, NavigableString):
         description_div = description_div.next_sibling
         
-    description_html: str = description_div.prettify()
-    description = (
-        re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", description_html) + "\n"
-    )
-    description = re.sub(r" (\\le|\\leq) ", r" <= ", description)
-    description = re.sub(r" (\\ge|\\geq) ", r" >= ", description)
+    description = fix_html_notation(description_div)
 
     input_specification_div: Tag = soup.find("div", class_="input-specification")
     input_title_div: Tag = input_specification_div.find("div", class_="section-title")
     input_title: str = input_title_div.text
     input_title_div.decompose()
-    input_specification_html = input_specification_div.prettify()
+
     input_specification = f"\n### {input_title}\n\n"
-    input_specification += (
-        re.sub(
-            r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", input_specification_html
-        )
-        + "\n"
-    )
-    input_specification = re.sub(r" (\\le|\\leq) ", r" <= ", input_specification)
-    input_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", input_specification)
+    input_specification += fix_html_notation(input_specification_div)
 
     output_specification_div = soup.find("div", class_="output-specification")
     output_title_div = output_specification_div.find("div", class_="section-title")
     output_title: str = output_title_div.text
     output_title_div.decompose()
-    output_specification_html = output_specification_div.prettify()
+
     output_specification = f"\n### {output_title}\n\n"
-    output_specification += (
-        re.sub(
-            r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", output_specification_html
-        )
-        + "\n"
-    )
-    output_specification = re.sub(r" (\\le|\\leq) ", r" <= ", output_specification)
-    output_specification = re.sub(r" (\\ge|\\geq) ", r" >= ", output_specification)
+    output_specification += fix_html_notation(output_specification_div)
 
     sample_tests_div: Tag = soup.find("div", class_="sample-tests")
     sample_tests_title_div = sample_tests_div.find(class_="section-title")
     sample_tests_title = sample_tests_title_div.text
     sample_tests_title_div.decompose()
     
-    sample_tests_html = sample_tests_div.prettify()
     sample_tests = f"\n## {sample_tests_title}\n\n"
-    sample_tests += (
-        re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", sample_tests_html)
-        + "\n"
-    )
+    sample_tests += fix_html_notation(sample_tests_div)
 
     sample_tests_elements: Tag = sample_tests_div.find(class_="sample-test")
     
@@ -266,27 +261,23 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
                 else:
                     file_tests_output += v.strip() + "\n"
                     output_value += re.sub(r"\n", r"\\n", v.strip() + "\n")
+                    
             file.write(
                 f'\n\n@pytest.mark.timeout({time_limit_value})\ndef test_solve_{number_of_examples}():\n\tassert solve("{input_value}") == "{output_value}"\n'
             )
 
     note_elem_div: Tag = soup.find("div", class_="note")
-
+    note_elem: str = ""
     if note_elem_div:
         note_elem_title_div: Tag = note_elem_div.find("div", class_="section-title")
         note_elem_title = note_elem_title_div.text
         note_elem_title_div.decompose()
-        note_elem_html = note_elem_div.prettify()
+
         note_elem = f"\n### {note_elem_title}\n\n "
-        note_elem += (
-            re.sub(r"\$\$\$([^\$]+)\$\$\$", r"<strong>\1</strong>", note_elem_html)
-            + "\n"
-        )
-        note_elem = re.sub(r" (\\le|\\leq) ", r" <= ", note_elem)
-        note_elem = re.sub(r" (\\ge|\\geq) ", r" >= ", note_elem)
+        note_elem += fix_html_notation(note_elem_div)
 
     with open(md_filename, "w") as file:
-        file.write(f"# [{title} #{c_id} - {c_ind}]({problem_url})\n")
+        file.write(f"# [{raw_title} #{c_id} - {c_ind}]({problem_url})\n")
         file.write(f"### Rating: {rating}\n")
         file.write(f"\n{memory_limit_title}: {memory_limit_value}\n")
         file.write(f"\n{input_file_title}: {input_file_value}\n")
@@ -295,8 +286,7 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
         file.write(input_specification)
         file.write(output_specification)
         file.write(sample_tests)
-        if note_elem_div:
-            file.write(note_elem)
+        file.write(note_elem)
 
     with open(f"./{title_underline}/input.txt", "w") as file:
         file.write(file_tests_input)
@@ -305,7 +295,7 @@ def main(min_rating: int = 700, max_rating: int = 900, problem_url: Optional[str
         file.write(file_tests_output)
 
     with open(f"./{title_underline}/solution_output.txt", "w") as file:
-        # Creates an empty solution file
+        # Creates an empty solution output file
         # (this helps when configuring pycharm to redirect output)
         file.write("")
 
